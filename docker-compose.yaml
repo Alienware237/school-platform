@@ -1,0 +1,59 @@
+version: '3'
+
+networks:
+  school-platform-project:
+    #      name: 50_default
+    driver: bridge
+
+services:
+
+  school-platform-project:
+    build:
+      dockerfile: Dockerfile
+    container_name: schoolPlatform-project
+    networks:
+      - school-platform-project
+    volumes:
+      - '.:/var/www/html'
+      - '/mnt/var:/mnt/var'
+    ports:
+      - "8096:80"
+
+  school-platform-database:
+    image: mysql:${MYSQL_VERSION:-latest}
+    container_name: school-platform-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: "school_database"
+      MYSQL_USER: "schoolUser"
+      MYSQL_PASSWORD: "123"
+      MYSQL_ROOT_PASSWORD: "root"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "--silent" ]
+    ports:
+      - "3313:3306"
+    volumes:
+      - school_platform_dwh:/var/lib/mysql
+    networks:
+      - school-platform-project
+
+  marketplace-phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: schoolPlatform-phpmyadmin
+    environment:
+      MYSQL_ROOT_PASSWORD: School
+      MYSQL_DATABASE: schoolPlatformApp
+      MYSQL_USER: schoolPlatformUser
+      MYSQL_PASSWORD: 123
+      PMA_HOST: schoolPlatform-database
+    restart: always
+    networks:
+      - school-platform-project
+    ports:
+      - 8083:80
+
+volumes:
+  ###> doctrine/doctrine-bundle ###
+  school_platform_dwh:
+
+  school-platform-project:
